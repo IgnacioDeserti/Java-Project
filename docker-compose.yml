@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-kanban}
+      POSTGRES_USER: ${DB_USER:-kanban}
+      POSTGRES_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
+    ports:
+      # Host port 5433, not 5432: avoids clashing with a native Postgres install on the
+      # host (common on Windows/Mac dev machines). The backend still talks to this
+      # container over the internal Docker network on the standard 5432.
+      - "5433:5432"
+    volumes:
+      - kanban_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kanban}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-kanban}
+      DB_USER: ${DB_USER:-kanban}
+      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET in .env, e.g. openssl rand -base64 48}"
+      SERVER_PORT: 8080
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-no-reply@example.com}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5173}
+      REQUIRE_EMAIL_VERIFICATION: ${REQUIRE_EMAIL_VERIFICATION:-true}
+      # "Sign in with Google" stays off (silently) until both of these are set — see
+      # GoogleOAuthConfig. No default here on purpose: an empty value is the "off" state.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # nginx proxies /api to the backend container, so no CORS in Docker.
+        VITE_API_URL: /api
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  kanban_pgdata:
