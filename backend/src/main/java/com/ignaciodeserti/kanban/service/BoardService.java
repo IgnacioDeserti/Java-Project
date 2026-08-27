@@ -6,6 +6,7 @@ import com.ignaciodeserti.kanban.entity.*;
 import com.ignaciodeserti.kanban.repository.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -158,6 +159,8 @@ public class BoardService {
         if (req.priority() != null) {
             card.setPriority(req.priority());
         }
+        card.setDueDate(req.dueDate());
+        replaceLabels(card, req.labels());
         card.setColumn(column);
 
         CardResponse response = CardResponse.from(cardRepository.save(card));
@@ -174,6 +177,10 @@ public class BoardService {
         if (req.priority() != null) {
             card.setPriority(req.priority());
         }
+        // A PUT carries the card's whole new state, so an absent due date or label set
+        // means "cleared", not "unchanged" — that's what makes removing them possible.
+        card.setDueDate(req.dueDate());
+        replaceLabels(card, req.labels());
         CardResponse response = CardResponse.from(cardRepository.save(card));
         boardBroadcaster.notifyBoardChanged(boardId);
         return response;
@@ -230,6 +237,18 @@ public class BoardService {
 
     private List<Card> cardsOf(BoardColumn column) {
         return new ArrayList<>(cardRepository.findByColumnOrderByPositionAsc(column));
+    }
+
+    /**
+     * Mutates the card's existing label collection in place rather than swapping in a new one:
+     * Hibernate tracks the managed collection instance, so replacing the reference makes it drop
+     * and re-insert every row instead of diffing them.
+     */
+    private void replaceLabels(Card card, Set<Card.Label> labels) {
+        card.getLabels().clear();
+        if (labels != null) {
+            card.getLabels().addAll(labels);
+        }
     }
 
     private void reindex(List<Card> cards) {

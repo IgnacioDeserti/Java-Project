@@ -211,6 +211,47 @@ class KanbanApiTest {
     }
 
     @Test
+    void storesDueDateAndLabelsOnACard() throws Exception {
+        String token = register("iris@example.com", "Iris");
+        JsonNode board = createBoard(token, "Planning");
+        long boardId = board.get("id").asLong();
+        long todo = board.get("columns").get(0).get("id").asLong();
+
+        MvcResult created =
+                mvc.perform(
+                                post("/api/boards/" + boardId + "/columns/" + todo + "/cards")
+                                        .header("Authorization", "Bearer " + token)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                """
+                                {"title":"Ship it","dueDate":"2026-12-24","labels":["RED","BLUE"]}"""))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.dueDate").value("2026-12-24"))
+                        // Serialized in enum declaration order, not the order sent.
+                        .andExpect(jsonPath("$.labels[0]").value("BLUE"))
+                        .andExpect(jsonPath("$.labels[1]").value("RED"))
+                        .andReturn();
+        long cardId = body(created).get("id").asLong();
+
+        // Survives a round trip through the database, not just the create response.
+        JsonNode reloaded = getBoard(token, boardId).get("columns").get(0).get("cards").get(0);
+        assertThat(reloaded.get("dueDate").asText()).isEqualTo("2026-12-24");
+        assertThat(reloaded.get("labels")).hasSize(2);
+
+        // A PUT carries the card's whole state, so omitting both fields clears them.
+        mvc.perform(
+                        put("/api/boards/" + boardId + "/cards/" + cardId)
+                                .header("Authorization", "Bearer " + token)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                {"title":"Ship it"}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dueDate").doesNotExist())
+                .andExpect(jsonPath("$.labels").isEmpty());
+    }
+
+    @Test
     void updatesAndDeletesACardClosingTheGap() throws Exception {
         String token = register("gina@example.com", "Gina");
         JsonNode board = createBoard(token, "Chores");

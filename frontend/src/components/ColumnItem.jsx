@@ -5,6 +5,7 @@ import CardItem from "./CardItem.jsx";
 export default function ColumnItem({
   column,
   dragHandleProps,
+  dragDisabled = false,
   onAddCard,
   onRenameColumn,
   onDeleteColumn,
@@ -53,6 +54,7 @@ export default function ColumnItem({
                 key={card.id}
                 card={card}
                 index={index}
+                dragDisabled={dragDisabled}
                 onUpdateCard={onUpdateCard}
                 onDeleteCard={onDeleteCard}
               />

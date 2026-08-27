@@ -6,8 +6,10 @@ import com.ignaciodeserti.kanban.entity.Card;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 public class BoardDtos {
 
@@ -32,12 +34,16 @@ public class BoardDtos {
             @NotBlank @Size(max = 200) String title,
             @Size(max = 2000) String description,
             Integer position,
-            Card.Priority priority) {}
+            Card.Priority priority,
+            LocalDate dueDate,
+            Set<Card.Label> labels) {}
 
     public record UpdateCardRequest(
             @NotBlank @Size(max = 200) String title,
             @Size(max = 2000) String description,
-            Card.Priority priority) {}
+            Card.Priority priority,
+            LocalDate dueDate,
+            Set<Card.Label> labels) {}
 
     /** Used when dragging a card to a new column/position. */
     public record MoveCardRequest(Long targetColumnId, Integer newPosition) {}
@@ -52,14 +58,22 @@ public class BoardDtos {
             String description,
             Integer position,
             Card.Priority priority,
+            LocalDate dueDate,
+            List<Card.Label> labels,
             Long columnId) {
         public static CardResponse from(Card card) {
+            // Sorted by declaration order so the same card always serializes its labels
+            // the same way — a Set has no inherent order, and the UI renders them in a row.
+            List<Card.Label> labels =
+                    card.getLabels().stream().sorted(Comparator.naturalOrder()).toList();
             return new CardResponse(
                     card.getId(),
                     card.getTitle(),
                     card.getDescription(),
                     card.getPosition(),
                     card.getPriority(),
+                    card.getDueDate(),
+                    labels,
                     card.getColumn().getId());
         }
     }

@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
-import { KanbanSquare, LayoutGrid, LogOut, Plus, User, X } from "lucide-react";
+import { Keyboard, KanbanSquare, LayoutGrid, LogOut, Plus, User, X } from "lucide-react";
 import LoginForm from "./components/LoginForm.jsx";
 import Board from "./components/Board.jsx";
 import VerifyEmailPage from "./components/VerifyEmailPage.jsx";
 import ResetPasswordPage from "./components/ResetPasswordPage.jsx";
 import OAuthCallbackPage from "./components/OAuthCallbackPage.jsx";
 import AccountSettings from "./components/AccountSettings.jsx";
+import ShortcutsHelp from "./components/ShortcutsHelp.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
+import { BoardListSkeleton, BoardSkeleton } from "./components/Skeletons.jsx";
 import { useToast } from "./context/ToastContext.jsx";
 import { useDialog } from "./context/DialogContext.jsx";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts.js";
 import {
   auth,
   boards as boardsApi,
@@ -37,8 +41,10 @@ export default function App() {
   const [boardList, setBoardList] = useState([]);
   const [activeBoard, setActiveBoard] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [openingBoard, setOpeningBoard] = useState(false);
   const [sessionNotice, setSessionNotice] = useState(null);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const logout = useCallback(() => {
     auth.logout();
@@ -116,12 +122,26 @@ export default function App() {
   }
 
   async function handleOpenBoard(boardId) {
+    setOpeningBoard(true);
     try {
       setActiveBoard(await boardsApi.get(boardId));
     } catch (err) {
       showToast(errorMessage(err, "Could not open the board"), { type: "error" });
+    } finally {
+      setOpeningBoard(false);
     }
   }
+
+  // Board-scoped shortcuts (new card, new column, search) live in Board.jsx; these are
+  // the ones that make sense anywhere in the app. Switched off while a modal is open so
+  // they can't fire behind it.
+  useKeyboardShortcuts(
+    {
+      "?": () => setShowShortcuts((open) => !open),
+      b: () => handleCreateBoard(),
+    },
+    { enabled: !!user && !showAccountSettings }
+  );
 
   async function handleResendVerification() {
     try {
@@ -172,6 +192,15 @@ export default function App() {
             <User size={14} />
             {user.displayName}
           </span>
+          <ThemeToggle />
+          <button
+            className="theme-toggle"
+            onClick={() => setShowShortcuts(true)}
+            title="Keyboard shortcuts ( ? )"
+            aria-label="Keyboard shortcuts"
+          >
+            <Keyboard size={16} />
+          </button>
           <button onClick={() => setShowAccountSettings(true)}>Account</button>
           <button onClick={logout}>
             <LogOut size={14} style={{ marginRight: "0.35rem", verticalAlign: -2 }} />
@@ -179,6 +208,8 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {showShortcuts && <ShortcutsHelp onClose={() => setShowShortcuts(false)} />}
 
       {showAccountSettings && (
         <AccountSettings
@@ -203,7 +234,11 @@ export default function App() {
         </div>
       )}
 
-      {!activeBoard && (
+      {/* Opening a board swaps in a skeleton shaped like the board itself, not like the
+          list being left behind — the placeholder should preview what's arriving. */}
+      {!activeBoard && openingBoard && <BoardSkeleton />}
+
+      {!activeBoard && !openingBoard && (
         <div className="board-list">
           <div className="board-list-header">
             <h2>Your boards</h2>
@@ -213,7 +248,7 @@ export default function App() {
             </button>
           </div>
 
-          {loading && <p className="loading-copy">Loading boards…</p>}
+          {loading && <BoardListSkeleton />}
           {!loading && boardList.length === 0 && (
             <p className="empty-hint">No boards yet — create one to get started.</p>
           )}

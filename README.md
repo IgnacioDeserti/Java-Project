@@ -21,6 +21,11 @@ A full-stack Kanban board application for organizing tasks across customizable b
 - Drag-and-drop cards within/across columns, and drag-and-drop to reorder columns themselves. The UI updates optimistically and rolls back if the server rejects the move.
 - **Live updates over WebSockets**: any change to a board (card moved, column added, etc.) is broadcast to every connected session viewing it — open the same board in two tabs and watch changes appear without a refresh. Subscriptions are authenticated with the JWT and re-checked against board ownership per-subscribe, so one user can't listen in on another's board.
 - Card and column positions stay a dense `0..n-1` sequence: moving or deleting one re-indexes the rest server-side, so ordering never drifts.
+- Cards carry an optional **due date** (shown as "Today"/"Tomorrow" and tinted once it's near or past) and any number of **colour labels**.
+- **Search and filters** within a board: by text, priority, and label (any-of). Reordering is deliberately paused while a filter is active — a drop position inside a filtered list has no unambiguous equivalent in the full one.
+- **Keyboard shortcuts** (`?` for the list): new board/card/column, focus search, close dialogs. They never fire while you're typing in a field or when a modifier key is held.
+- **Dark mode** with a three-way toggle — light, dark, or follow the OS — built on the same CSS custom properties as the light theme rather than a second stylesheet.
+- Skeleton placeholders while data loads, staggered entrance animations, and full respect for `prefers-reduced-motion`.
 - Account settings: rename, change password (logs out every other session), delete account (cascades to every board you own) — all from an in-app modal, no need to log out first.
 - Responsive layout down to small screens; icon-only buttons carry `aria-label`s and the "rename column" control is a real, keyboard-reachable button rather than a clickable `<h3>`.
 - **Sign in with Google** (optional, off until configured — see [Google OAuth setup](#google-oauth-setup)): links to an existing account by email if one exists, otherwise creates a new one with no local password. Such accounts can add a password later from Account settings — set once, no old one to prove — which then also unlocks email/password login for them.
@@ -56,9 +61,9 @@ cd frontend && npm install && npm run dev
 ## Tests
 
 ```bash
-cd backend && mvn test           # 26 tests
-cd frontend && npm test          # 18 unit tests (Vitest)
-cd frontend && npm run test:e2e  # 9 E2E tests (Playwright) — needs the full stack running, see below
+cd backend && mvn test           # 27 tests
+cd frontend && npm test          # 27 unit tests (Vitest)
+cd frontend && npm run test:e2e  # 16 E2E tests (Playwright) — needs the full stack running, see below
 ```
 
 Backend:
@@ -69,9 +74,9 @@ Backend:
 - `RateLimitTest` — proves the login throttle actually returns `429` once its limit is exhausted.
 - `WebSocketBroadcastTest` — a real STOMP client against a live embedded server: connects with a JWT, subscribes to a board's topic, and asserts a REST mutation produces a broadcast; a second test asserts subscribing to another user's board is rejected.
 
-Frontend unit tests: Vitest + Testing Library, covering the API client's error-handling helpers, `LoginForm`'s login/register/verification-resend flows, and `AccountSettings`' rename/change-password/delete-account flows (both the normal and password-optional variants).
+Frontend unit tests: Vitest + Testing Library, covering the API client's error-handling helpers, `LoginForm`'s login/register/verification-resend flows, `AccountSettings`' rename/change-password/delete-account flows (both the normal and password-optional variants), and the due-date helpers — including a regression test for the timezone trap where `new Date("2026-12-24")` parses as UTC midnight and renders a day early anywhere west of Greenwich.
 
-E2E (`frontend/e2e/`, Playwright): drives a real Chromium browser against the actual running stack — no mocks. `auth.spec.js` covers signup/login/logout through the real UI; `boards.spec.js` covers board/column/card CRUD, including the custom confirm/prompt dialogs; `drag-and-drop.spec.js` covers moving a card between columns and reordering columns, verifying each persisted by leaving and reopening the board (dragging is driven via the drag handle's built-in keyboard support — Space to lift, arrow keys to move, Space to drop — which is far more reliable in a headless browser than simulating mouse movement against @hello-pangea/dnd's sensor, and doubles as an accessibility check).
+E2E (`frontend/e2e/`, Playwright): drives a real Chromium browser against the actual running stack — no mocks. `auth.spec.js` covers signup/login/logout through the real UI; `boards.spec.js` covers board/column/card CRUD, including the custom confirm/prompt dialogs; `filters-and-shortcuts.spec.js` covers search/priority/label filtering, the paused-drag behaviour, and the keyboard shortcuts (including that they stay out of the way while typing); `drag-and-drop.spec.js` covers moving a card between columns and reordering columns, verifying each persisted by leaving and reopening the board (dragging is driven via the drag handle's built-in keyboard support — Space to lift, arrow keys to move, Space to drop — which is far more reliable in a headless browser than simulating mouse movement against @hello-pangea/dnd's sensor, and doubles as an accessibility check).
 
 To run E2E locally: start the stack (`docker compose up --build`), then `cd frontend && npx playwright install --with-deps chromium && npm run test:e2e`. The suite registers about a dozen throwaway accounts, comfortably past the default register rate limit (5/10 min) — bump `RATE_LIMIT_REGISTER_MAX` in `.env` while iterating locally, same as CI does for its run.
 
@@ -216,8 +221,10 @@ kanban-board/
 │   └── src/test/java/    # KanbanApiTest, AuthFlowsTest, ProfileManagementTest, GoogleLoginTest, RateLimitTest, WebSocketBroadcastTest
 ├── frontend/         # React + Vite app
 │   ├── src/
-│   │   ├── components/   # Board, ColumnItem, CardItem, LoginForm, AccountSettings, Modal, VerifyEmailPage, ResetPasswordPage, OAuthCallbackPage
-│   │   ├── context/       # ToastContext, DialogContext (in-app replacements for window.alert/confirm/prompt)
+│   │   ├── components/   # Board, ColumnItem, CardItem, LoginForm, AccountSettings, Modal, Skeletons, ShortcutsHelp, ThemeToggle, VerifyEmailPage, ResetPasswordPage, OAuthCallbackPage
+│   │   ├── context/       # ThemeContext, ToastContext, DialogContext (in-app replacements for window.alert/confirm/prompt)
+│   │   ├── hooks/         # useKeyboardShortcuts
+│   │   ├── utils/         # date helpers for due dates
 │   │   └── api/          # Axios client (token refresh), realtime.js (STOMP)
 │   ├── e2e/              # Playwright end-to-end tests
 │   └── nginx.conf        # SPA routing + /api, /ws and /oauth2 proxy
@@ -232,3 +239,5 @@ kanban-board/
 - No HTTPS termination is set up here — put a real TLS certificate in front of this (a reverse proxy, load balancer, or platform-managed cert) before exposing it publicly.
 - The board is per-user; sharing a board with other users would be the natural next feature — the WebSocket infrastructure (per-board topics, ownership-checked subscriptions) is already built to support it.
 - No deep link into a specific board (the open board lives only in React state) — a full page reload always lands back on the board list. Worth fixing with a real route (`/boards/:id`) if this grows past a portfolio piece.
+- Search and filtering happen client-side, over the board already loaded in memory. That's instant and avoids a round trip per keystroke, but it wouldn't hold up for a board with thousands of cards — that would want a server-side query with pagination.
+- Labels are a fixed palette of six colours owned by each card, not named, board-level labels that can be renamed in one place. See the note at the top of `V3__card_due_date_and_labels.sql` for the trade-off.
