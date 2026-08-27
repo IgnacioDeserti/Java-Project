@@ -36,7 +36,11 @@ export function DialogProvider({ children }) {
     <DialogContext.Provider value={{ confirm, prompt }}>
       {children}
       {request?.kind === "confirm" && (
-        <ConfirmModal request={request} onCancel={() => close(false)} onConfirm={() => close(true)} />
+        <ConfirmModal
+          request={request}
+          onCancel={() => close(false)}
+          onConfirm={() => close(true)}
+        />
       )}
       {request?.kind === "prompt" && (
         <PromptModal
@@ -66,7 +70,11 @@ function ConfirmModal({ request, onCancel, onConfirm }) {
         <button className="btn-secondary" onClick={onCancel}>
           Cancel
         </button>
-        <button className={request.danger ? "btn-danger" : "btn-primary"} onClick={onConfirm} autoFocus>
+        <button
+          className={request.danger ? "btn-danger" : "btn-primary"}
+          onClick={onConfirm}
+          autoFocus
+        >
           {request.confirmLabel}
         </button>
       </div>

@@ -3,6 +3,8 @@ package com.ignaciodeserti.kanban.config;
 import com.ignaciodeserti.kanban.repository.BoardRepository;
 import com.ignaciodeserti.kanban.repository.UserRepository;
 import com.ignaciodeserti.kanban.security.JwtService;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.messaging.Message;
@@ -18,15 +20,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
- * WebSocket/STOMP traffic never passes through the regular JWT servlet filter (the
- * handshake is a plain, unauthenticated HTTP upgrade). Instead, the client sends its
- * access token as a STOMP "Authorization" header on CONNECT, which this interceptor
- * validates and turns into the frame's Principal — then re-checks board ownership on
- * every SUBSCRIBE, so one user can't listen in on another user's board.
+ * WebSocket/STOMP traffic never passes through the regular JWT servlet filter (the handshake is a
+ * plain, unauthenticated HTTP upgrade). Instead, the client sends its access token as a STOMP
+ * "Authorization" header on CONNECT, which this interceptor validates and turns into the frame's
+ * Principal — then re-checks board ownership on every SUBSCRIBE, so one user can't listen in on
+ * another user's board.
  */
 @Component
 @RequiredArgsConstructor
@@ -41,7 +40,8 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
     @Override
     public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
-        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        StompHeaderAccessor accessor =
+                MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         if (accessor == null) {
             return message;
         }
@@ -71,7 +71,8 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
             throw new MessagingException("Invalid or expired token");
         }
 
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        return new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
     }
 
     private void requireBoardOwnership(StompHeaderAccessor accessor) {
@@ -91,9 +92,11 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         }
 
         Long boardId = Long.valueOf(matcher.group(1));
-        boolean owns = userRepository.findByEmail(auth.getName())
-                .flatMap(user -> boardRepository.findByIdAndOwner(boardId, user))
-                .isPresent();
+        boolean owns =
+                userRepository
+                        .findByEmail(auth.getName())
+                        .flatMap(user -> boardRepository.findByIdAndOwner(boardId, user))
+                        .isPresent();
 
         if (!owns) {
             throw new MessagingException("Not your board");

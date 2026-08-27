@@ -4,9 +4,6 @@ import com.ignaciodeserti.kanban.entity.User;
 import com.ignaciodeserti.kanban.entity.UserToken;
 import com.ignaciodeserti.kanban.entity.UserToken.Type;
 import com.ignaciodeserti.kanban.repository.UserTokenRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -15,10 +12,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 /**
- * Issues and redeems one-time tokens (email verification, password reset, refresh).
- * Callers only ever see the raw token; the database only ever stores its hash.
+ * Issues and redeems one-time tokens (email verification, password reset, refresh). Callers only
+ * ever see the raw token; the database only ever stores its hash.
  */
 @Service
 @RequiredArgsConstructor
@@ -66,7 +65,9 @@ public class UserTokenService {
 
     private String hash(String raw) {
         try {
-            byte[] digest = MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8));
+            byte[] digest =
+                    MessageDigest.getInstance("SHA-256")
+                            .digest(raw.getBytes(StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 not available", e);

@@ -1,13 +1,12 @@
 package com.ignaciodeserti.kanban.entity;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -33,8 +32,10 @@ public class User {
     @Column(nullable = false)
     private boolean emailVerified = false;
 
-    /** How the account was created; informational — a Google account can add a local
-     *  password later (via forgot-password), and this won't change to reflect that. */
+    /**
+     * How the account was created; informational — a Google account can add a local password later
+     * (via forgot-password), and this won't change to reflect that.
+     */
     @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider", nullable = false, length = 20)
     private AuthProvider authProvider = AuthProvider.LOCAL;
@@ -43,6 +44,7 @@ public class User {
     private List<Board> boards = new ArrayList<>();
 
     public enum AuthProvider {
-        LOCAL, GOOGLE
+        LOCAL,
+        GOOGLE
     }
 }

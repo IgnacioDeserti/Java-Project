@@ -1,17 +1,16 @@
 package com.ignaciodeserti.kanban.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
-
 /**
- * A one-time-use, opaque token handed to the user (via email or as a refresh token),
- * with only its SHA-256 hash stored here — so a leaked database dump doesn't hand out
- * usable tokens. Used for email verification, password reset, and refresh tokens alike.
+ * A one-time-use, opaque token handed to the user (via email or as a refresh token), with only its
+ * SHA-256 hash stored here — so a leaked database dump doesn't hand out usable tokens. Used for
+ * email verification, password reset, and refresh tokens alike.
  */
 @Entity
 @Table(name = "user_tokens")
@@ -50,6 +49,8 @@ public class UserToken {
     }
 
     public enum Type {
-        EMAIL_VERIFICATION, PASSWORD_RESET, REFRESH
+        EMAIL_VERIFICATION,
+        PASSWORD_RESET,
+        REFRESH
     }
 }

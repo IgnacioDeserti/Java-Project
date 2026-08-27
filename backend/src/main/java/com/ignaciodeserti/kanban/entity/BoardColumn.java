@@ -2,13 +2,12 @@ package com.ignaciodeserti.kanban.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 // Named BoardColumn (not "Column") to avoid clashing with java.sql.* / SQL keyword issues
 @Entity

@@ -1,17 +1,16 @@
 package com.ignaciodeserti.kanban.config;
 
-import org.springframework.stereotype.Component;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import org.springframework.stereotype.Component;
 
 /**
- * A minimal in-memory sliding-window rate limiter, keyed by caller-supplied strings
- * (typically "ip:route"). Good enough for a single-instance deployment; a multi-instance
- * deployment would need a shared store (e.g. Redis) instead.
+ * A minimal in-memory sliding-window rate limiter, keyed by caller-supplied strings (typically
+ * "ip:route"). Good enough for a single-instance deployment; a multi-instance deployment would need
+ * a shared store (e.g. Redis) instead.
  */
 @Component
 public class RateLimiter {

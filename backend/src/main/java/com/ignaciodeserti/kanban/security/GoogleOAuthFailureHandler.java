@@ -2,12 +2,11 @@ package com.ignaciodeserti.kanban.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 @Component
 public class GoogleOAuthFailureHandler implements AuthenticationFailureHandler {
@@ -16,8 +15,11 @@ public class GoogleOAuthFailureHandler implements AuthenticationFailureHandler {
     private String frontendBaseUrl;
 
     @Override
-    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-            AuthenticationException exception) throws IOException {
+    public void onAuthenticationFailure(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            AuthenticationException exception)
+            throws IOException {
         response.sendRedirect(frontendBaseUrl + "/oauth-callback#error=google_login_failed");
     }
 }

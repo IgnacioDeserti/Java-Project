@@ -32,7 +32,10 @@ export default function Board({ board, onBoardChange, onBoardDeleted }) {
       if (event.type === "BOARD_DELETED") {
         onBoardDeleted?.();
       } else {
-        boardsApi.get(board.id).then(onBoardChange).catch(() => {});
+        boardsApi
+          .get(board.id)
+          .then(onBoardChange)
+          .catch(() => {});
       }
     });
     return unsubscribe;
@@ -54,10 +57,7 @@ export default function Board({ board, onBoardChange, onBoardDeleted }) {
   async function handleCardDragEnd({ source, destination, draggableId }) {
     // Dropped outside a column, or back where it started: nothing to do.
     if (!destination) return;
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    ) {
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
       return;
     }
 
@@ -121,7 +121,11 @@ export default function Board({ board, onBoardChange, onBoardDeleted }) {
   }
 
   async function handleRenameColumn(columnId, currentTitle) {
-    const title = await prompt({ title: "Rename column", label: "Column title", initialValue: currentTitle });
+    const title = await prompt({
+      title: "Rename column",
+      label: "Column title",
+      initialValue: currentTitle,
+    });
     if (!title || title === currentTitle) return;
     try {
       await boardsApi.updateColumn(board.id, columnId, { title });

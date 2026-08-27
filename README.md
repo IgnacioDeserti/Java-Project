@@ -7,7 +7,8 @@ A full-stack Kanban board application for organizing tasks across customizable b
 - **Backend:** Java 17, Spring Boot 3, Spring Security, Hibernate/JPA, Flyway, Maven, JWT (jjwt), Spring Mail, Spring WebSocket (STOMP)
 - **Frontend:** React 18, Vite, @hello-pangea/dnd (drag-and-drop), Axios, @stomp/stompjs
 - **Database:** PostgreSQL
-- **Infra:** Docker, Docker Compose, nginx, GitHub Actions CI
+- **Infra:** Docker, Docker Compose, nginx, GitHub Actions CI, Dependabot
+- **Quality tooling:** Spotless (Java formatting), ESLint + Prettier (frontend), Playwright (E2E), springdoc-openapi (interactive API docs)
 
 ## Features
 
@@ -40,6 +41,8 @@ docker compose up --build
 
 Without SMTP configured (`MAIL_HOST` empty), verification and password-reset emails are logged to the backend console instead of sent — copy the link from `docker compose logs backend` to test those flows locally.
 
+Interactive API docs (Swagger UI): http://localhost:8080/swagger-ui/index.html — generated from the code (springdoc-openapi), so it never drifts from the real endpoints. Click **Authorize** and paste an access token (from `/api/auth/login` or `/api/auth/register`) to try protected endpoints directly from the browser.
+
 ### Without Docker
 
 ```bash
@@ -53,8 +56,9 @@ cd frontend && npm install && npm run dev
 ## Tests
 
 ```bash
-cd backend && mvn test        # 26 tests
-cd frontend && npm test       # 18 tests
+cd backend && mvn test           # 26 tests
+cd frontend && npm test          # 18 unit tests (Vitest)
+cd frontend && npm run test:e2e  # 9 E2E tests (Playwright) — needs the full stack running, see below
 ```
 
 Backend:
@@ -65,9 +69,13 @@ Backend:
 - `RateLimitTest` — proves the login throttle actually returns `429` once its limit is exhausted.
 - `WebSocketBroadcastTest` — a real STOMP client against a live embedded server: connects with a JWT, subscribes to a board's topic, and asserts a REST mutation produces a broadcast; a second test asserts subscribing to another user's board is rejected.
 
-Frontend: Vitest + Testing Library, covering the API client's error-handling helpers, `LoginForm`'s login/register/verification-resend flows, and `AccountSettings`' rename/change-password/delete-account flows (both the normal and password-optional variants).
+Frontend unit tests: Vitest + Testing Library, covering the API client's error-handling helpers, `LoginForm`'s login/register/verification-resend flows, and `AccountSettings`' rename/change-password/delete-account flows (both the normal and password-optional variants).
 
-CI (`.github/workflows/ci.yml`) runs the backend test suite, the frontend test suite + build, and builds both Docker images, on every push/PR to `main`.
+E2E (`frontend/e2e/`, Playwright): drives a real Chromium browser against the actual running stack — no mocks. `auth.spec.js` covers signup/login/logout through the real UI; `boards.spec.js` covers board/column/card CRUD, including the custom confirm/prompt dialogs; `drag-and-drop.spec.js` covers moving a card between columns and reordering columns, verifying each persisted by leaving and reopening the board (dragging is driven via the drag handle's built-in keyboard support — Space to lift, arrow keys to move, Space to drop — which is far more reliable in a headless browser than simulating mouse movement against @hello-pangea/dnd's sensor, and doubles as an accessibility check).
+
+To run E2E locally: start the stack (`docker compose up --build`), then `cd frontend && npx playwright install --with-deps chromium && npm run test:e2e`. The suite registers about a dozen throwaway accounts, comfortably past the default register rate limit (5/10 min) — bump `RATE_LIMIT_REGISTER_MAX` in `.env` while iterating locally, same as CI does for its run.
+
+CI (`.github/workflows/ci.yml`) runs on every push/PR to `master` or `develop`: the backend suite (plus `spotless:check`), the frontend suite (lint, Prettier check, unit tests, build), both Docker images, and the full E2E suite against a live `docker compose` stack.
 
 ## API overview
 
@@ -162,6 +170,28 @@ No code change needed — `EmailService` already speaks SMTP via `spring-boot-st
 
 A Google sign-in links to an existing account with the same email (trusting Google's verification of that email, since it already required proving ownership to have a Google account with it) rather than creating a duplicate, and a brand-new Google sign-up gets no local password — `hasPassword: false` on the user — until they set one from Account settings.
 
+## Code style
+
+```bash
+cd backend && mvn spotless:apply    # reformat Java (Google Java Format, AOSP style)
+cd backend && mvn spotless:check    # what CI runs — fails on unformatted code
+
+cd frontend && npm run lint         # ESLint
+cd frontend && npm run format       # reformat with Prettier
+cd frontend && npm run format:check # what CI runs
+```
+
+## Branch protection (GitHub setup, not code)
+
+Not something a config file can turn on — set it up once per repo, under **Settings → Branches → Add branch protection rule** on GitHub:
+
+1. Branch name pattern: `master` (repeat for `develop` if you want it protected too).
+2. Enable **Require a pull request before merging**.
+3. Enable **Require status checks to pass before merging**, and select the CI jobs (`Backend (build + test)`, `Frontend (build)`, `Docker images build`, `E2E (Playwright)`) once they've run at least once (GitHub only lists jobs it's seen).
+4. Optionally enable **Require branches to be up to date before merging**.
+
+With this on, nothing lands on `master` without a green CI run first — the standard setup for a repo meant to demonstrate process, not just code.
+
 ## Database migrations
 
 Schema is owned by Flyway (`backend/src/main/resources/db/migration/`), not `hibernate.ddl-auto` (set to `validate`, so a mismatch between entities and the real schema fails fast at startup instead of silently drifting). To change the schema: add a new `V{n}__description.sql` file — never edit an already-applied one.
@@ -170,7 +200,9 @@ Schema is owned by Flyway (`backend/src/main/resources/db/migration/`), not `hib
 
 ```
 kanban-board/
-├── .github/workflows/ci.yml   # backend tests, frontend tests+build, Docker builds
+├── .github/
+│   ├── workflows/ci.yml   # backend+frontend tests, lint/format checks, Docker builds, E2E
+│   └── dependabot.yml     # weekly dependency update PRs (Maven, npm, Docker, Actions)
 ├── backend/          # Spring Boot API
 │   ├── src/main/java/com/ignaciodeserti/kanban/
 │   │   ├── entity/       # User, Board, BoardColumn, Card, UserToken
@@ -179,7 +211,7 @@ kanban-board/
 │   │   ├── service/      # AuthService, BoardService, EmailService, UserTokenService, BoardBroadcaster
 │   │   ├── controller/   # AuthController, BoardController
 │   │   ├── dto/          # Request/response records
-│   │   └── config/       # SecurityConfig, AuthBeansConfig, GoogleOAuthConfig, WebSocketConfig, GlobalExceptionHandler, rate limiting
+│   │   └── config/       # SecurityConfig, AuthBeansConfig, GoogleOAuthConfig, OpenApiConfig, WebSocketConfig, GlobalExceptionHandler, rate limiting
 │   ├── src/main/resources/db/migration/  # Flyway migrations
 │   └── src/test/java/    # KanbanApiTest, AuthFlowsTest, ProfileManagementTest, GoogleLoginTest, RateLimitTest, WebSocketBroadcastTest
 ├── frontend/         # React + Vite app
@@ -187,8 +219,10 @@ kanban-board/
 │   │   ├── components/   # Board, ColumnItem, CardItem, LoginForm, AccountSettings, Modal, VerifyEmailPage, ResetPasswordPage, OAuthCallbackPage
 │   │   ├── context/       # ToastContext, DialogContext (in-app replacements for window.alert/confirm/prompt)
 │   │   └── api/          # Axios client (token refresh), realtime.js (STOMP)
+│   ├── e2e/              # Playwright end-to-end tests
 │   └── nginx.conf        # SPA routing + /api, /ws and /oauth2 proxy
 ├── .env.example      # Copy to .env — never commit the real one
+├── LICENSE           # MIT
 └── docker-compose.yml
 ```
 
@@ -197,3 +231,4 @@ kanban-board/
 - The rate limiter and refresh-token/verification tokens are stored in-process/in the app's own database — fine for a single backend instance; a multi-instance deployment would want a shared store (Redis) for the rate limiter specifically, and a shared message broker (RabbitMQ/ActiveMQ via STOMP relay) instead of the in-memory simple broker for WebSocket fan-out.
 - No HTTPS termination is set up here — put a real TLS certificate in front of this (a reverse proxy, load balancer, or platform-managed cert) before exposing it publicly.
 - The board is per-user; sharing a board with other users would be the natural next feature — the WebSocket infrastructure (per-board topics, ownership-checked subscriptions) is already built to support it.
+- No deep link into a specific board (the open board lives only in React state) — a full page reload always lands back on the board list. Worth fixing with a real route (`/boards/:id`) if this grows past a portfolio piece.

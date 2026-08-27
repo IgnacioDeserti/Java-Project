@@ -3,12 +3,11 @@ package com.ignaciodeserti.kanban.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.function.Function;
+import javax.crypto.SecretKey;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Component
 public class JwtService {
@@ -48,8 +47,8 @@ public class JwtService {
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> resolver) {
-        Claims claims = Jwts.parser().verifyWith(key()).build()
-                .parseSignedClaims(token).getPayload();
+        Claims claims =
+                Jwts.parser().verifyWith(key()).build().parseSignedClaims(token).getPayload();
         return resolver.apply(claims);
     }
 }

@@ -17,14 +17,25 @@ vi.mock("../api/client.js", async (importOriginal) => {
   };
 });
 
-const user = { email: "alice@example.com", displayName: "Alice", emailVerified: true, hasPassword: true };
+const user = {
+  email: "alice@example.com",
+  displayName: "Alice",
+  emailVerified: true,
+  hasPassword: true,
+};
 
 // AccountSettings' delete flow opens our own confirm dialog (via useDialog()), so it
 // needs a DialogProvider ancestor — not a window.confirm mock.
 function renderAccountSettings(props) {
   return render(
     <DialogProvider>
-      <AccountSettings user={user} onClose={vi.fn()} onProfileUpdated={vi.fn()} onAccountDeleted={vi.fn()} {...props} />
+      <AccountSettings
+        user={user}
+        onClose={vi.fn()}
+        onProfileUpdated={vi.fn()}
+        onAccountDeleted={vi.fn()}
+        {...props}
+      />
     </DialogProvider>
   );
 }

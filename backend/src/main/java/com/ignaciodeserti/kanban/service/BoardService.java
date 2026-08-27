@@ -4,12 +4,11 @@ import com.ignaciodeserti.kanban.config.NotFoundException;
 import com.ignaciodeserti.kanban.dto.BoardDtos.*;
 import com.ignaciodeserti.kanban.entity.*;
 import com.ignaciodeserti.kanban.repository.*;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -95,7 +94,8 @@ public class BoardService {
     }
 
     @Transactional
-    public ColumnResponse updateColumn(String userEmail, Long boardId, Long columnId, UpdateColumnRequest req) {
+    public ColumnResponse updateColumn(
+            String userEmail, Long boardId, Long columnId, UpdateColumnRequest req) {
         BoardColumn column = ownedColumn(userEmail, boardId, columnId);
         column.setTitle(req.title());
         ColumnResponse response = ColumnResponse.from(columnRepository.save(column));
@@ -105,11 +105,13 @@ public class BoardService {
 
     /** Moves a column to a new position on the board, re-indexing the others around it. */
     @Transactional
-    public ColumnResponse moveColumn(String userEmail, Long boardId, Long columnId, MoveColumnRequest req) {
+    public ColumnResponse moveColumn(
+            String userEmail, Long boardId, Long columnId, MoveColumnRequest req) {
         Board board = ownedBoard(userEmail, boardId);
         BoardColumn column = findColumn(board, columnId);
 
-        List<BoardColumn> columns = new ArrayList<>(columnRepository.findByBoardOrderByPositionAsc(board));
+        List<BoardColumn> columns =
+                new ArrayList<>(columnRepository.findByBoardOrderByPositionAsc(board));
         columns.removeIf(c -> c.getId().equals(columnId));
         columns.add(clamp(req.newPosition(), columns.size()), column);
 
@@ -143,7 +145,8 @@ public class BoardService {
     // --- Cards ---
 
     @Transactional
-    public CardResponse createCard(String userEmail, Long boardId, Long columnId, CreateCardRequest req) {
+    public CardResponse createCard(
+            String userEmail, Long boardId, Long columnId, CreateCardRequest req) {
         BoardColumn column = ownedColumn(userEmail, boardId, columnId);
 
         int size = cardRepository.countByColumn(column).intValue();
@@ -163,7 +166,8 @@ public class BoardService {
     }
 
     @Transactional
-    public CardResponse updateCard(String userEmail, Long boardId, Long cardId, UpdateCardRequest req) {
+    public CardResponse updateCard(
+            String userEmail, Long boardId, Long cardId, UpdateCardRequest req) {
         Card card = ownedCard(userEmail, boardId, cardId);
         card.setTitle(req.title());
         card.setDescription(req.description());
@@ -181,15 +185,15 @@ public class BoardService {
         BoardColumn column = card.getColumn();
 
         column.getCards().remove(card); // orphanRemoval turns this into a DELETE
-        cardRepository.flush();         // delete before we renumber, so positions don't collide
+        cardRepository.flush(); // delete before we renumber, so positions don't collide
 
         reindex(cardsOf(column));
         boardBroadcaster.notifyBoardChanged(boardId);
     }
 
     /**
-     * Moves a card to a (possibly different) column and re-indexes both columns so
-     * positions stay a dense 0..n-1 sequence. This backs the drag-and-drop interaction.
+     * Moves a card to a (possibly different) column and re-indexes both columns so positions stay a
+     * dense 0..n-1 sequence. This backs the drag-and-drop interaction.
      */
     @Transactional
     public CardResponse moveCard(String userEmail, Long boardId, Long cardId, MoveCardRequest req) {
@@ -197,9 +201,8 @@ public class BoardService {
         Card card = findOwnedCard(board, cardId);
 
         BoardColumn source = card.getColumn();
-        BoardColumn target = req.targetColumnId() == null
-                ? source
-                : findColumn(board, req.targetColumnId());
+        BoardColumn target =
+                req.targetColumnId() == null ? source : findColumn(board, req.targetColumnId());
 
         // Work on detached copies of the orderings: the entity collections are the
         // inverse side, and mutating them would trip orphanRemoval on a move.
@@ -244,7 +247,8 @@ public class BoardService {
 
     private Board ownedBoard(String userEmail, Long boardId) {
         User owner = getUser(userEmail);
-        return boardRepository.findByIdAndOwner(boardId, owner)
+        return boardRepository
+                .findByIdAndOwner(boardId, owner)
                 .orElseThrow(() -> new NotFoundException("Board not found"));
     }
 
@@ -265,8 +269,10 @@ public class BoardService {
 
     /** Looks the card up through the board, so one user can never touch another's card by id. */
     private Card findOwnedCard(Board board, Long cardId) {
-        Card card = cardRepository.findById(cardId)
-                .orElseThrow(() -> new NotFoundException("Card not found"));
+        Card card =
+                cardRepository
+                        .findById(cardId)
+                        .orElseThrow(() -> new NotFoundException("Card not found"));
         if (!card.getColumn().getBoard().getId().equals(board.getId())) {
             throw new NotFoundException("Card not found on this board");
         }
@@ -274,7 +280,8 @@ public class BoardService {
     }
 
     private User getUser(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository
+                .findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
     }
 }

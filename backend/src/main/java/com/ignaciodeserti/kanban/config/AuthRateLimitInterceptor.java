@@ -2,18 +2,16 @@ package com.ignaciodeserti.kanban.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import java.time.Duration;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.time.Duration;
-import java.util.Map;
-
 /**
- * Throttles the unauthenticated auth endpoints per client IP, so a script can't brute-force
- * logins or spam account creation / password-reset emails. Thrown as an exception (not
- * written directly) so it goes through GlobalExceptionHandler and gets a consistent JSON body.
+ * Throttles the unauthenticated auth endpoints per client IP, so a script can't brute-force logins
+ * or spam account creation / password-reset emails. Thrown as an exception (not written directly)
+ * so it goes through GlobalExceptionHandler and gets a consistent JSON body.
  */
 @Component
 public class AuthRateLimitInterceptor implements HandlerInterceptor {
@@ -28,19 +26,28 @@ public class AuthRateLimitInterceptor implements HandlerInterceptor {
             @Value("${app.rate-limit.register.max-attempts:5}") int registerMax,
             @Value("${app.rate-limit.register.window-seconds:600}") long registerWindowSeconds,
             @Value("${app.rate-limit.password-reset.max-attempts:5}") int passwordResetMax,
-            @Value("${app.rate-limit.password-reset.window-seconds:600}") long passwordResetWindowSeconds
-    ) {
+            @Value("${app.rate-limit.password-reset.window-seconds:600}")
+                    long passwordResetWindowSeconds) {
         this.rateLimiter = rateLimiter;
-        this.limits = Map.of(
-                "/api/auth/login", new Limit(loginMax, Duration.ofSeconds(loginWindowSeconds)),
-                "/api/auth/register", new Limit(registerMax, Duration.ofSeconds(registerWindowSeconds)),
-                "/api/auth/forgot-password", new Limit(passwordResetMax, Duration.ofSeconds(passwordResetWindowSeconds)),
-                "/api/auth/resend-verification", new Limit(passwordResetMax, Duration.ofSeconds(passwordResetWindowSeconds))
-        );
+        this.limits =
+                Map.of(
+                        "/api/auth/login",
+                                new Limit(loginMax, Duration.ofSeconds(loginWindowSeconds)),
+                        "/api/auth/register",
+                                new Limit(registerMax, Duration.ofSeconds(registerWindowSeconds)),
+                        "/api/auth/forgot-password",
+                                new Limit(
+                                        passwordResetMax,
+                                        Duration.ofSeconds(passwordResetWindowSeconds)),
+                        "/api/auth/resend-verification",
+                                new Limit(
+                                        passwordResetMax,
+                                        Duration.ofSeconds(passwordResetWindowSeconds)));
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+    public boolean preHandle(
+            HttpServletRequest request, HttpServletResponse response, Object handler) {
         Limit limit = limits.get(request.getRequestURI());
         if (limit == null) {
             return true;

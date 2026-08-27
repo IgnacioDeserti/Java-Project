@@ -43,7 +43,8 @@ public class AuthController {
     }
 
     @PostMapping("/resend-verification")
-    public MessageResponse resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
+    public MessageResponse resendVerification(
+            @Valid @RequestBody ResendVerificationRequest request) {
         return authService.resendVerification(request);
     }
 
@@ -66,24 +67,21 @@ public class AuthController {
     @PutMapping("/me")
     public UserResponse updateProfile(
             @AuthenticationPrincipal UserDetails user,
-            @Valid @RequestBody UpdateProfileRequest request
-    ) {
+            @Valid @RequestBody UpdateProfileRequest request) {
         return authService.updateProfile(user.getUsername(), request);
     }
 
     @PostMapping("/change-password")
     public MessageResponse changePassword(
             @AuthenticationPrincipal UserDetails user,
-            @Valid @RequestBody ChangePasswordRequest request
-    ) {
+            @Valid @RequestBody ChangePasswordRequest request) {
         return authService.changePassword(user.getUsername(), request);
     }
 
     @DeleteMapping("/me")
     public ResponseEntity<Void> deleteAccount(
             @AuthenticationPrincipal UserDetails user,
-            @Valid @RequestBody DeleteAccountRequest request
-    ) {
+            @Valid @RequestBody DeleteAccountRequest request) {
         authService.deleteAccount(user.getUsername(), request);
         return ResponseEntity.noContent().build();
     }

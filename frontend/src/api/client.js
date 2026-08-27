@@ -107,14 +107,16 @@ export function isEmailNotVerified(err) {
 }
 
 export const auth = {
-  register: (payload) => api.post("/auth/register", payload).then((r) => {
-    storeSession(r.data);
-    return r.data;
-  }),
-  login: (payload) => api.post("/auth/login", payload).then((r) => {
-    storeSession(r.data);
-    return r.data;
-  }),
+  register: (payload) =>
+    api.post("/auth/register", payload).then((r) => {
+      storeSession(r.data);
+      return r.data;
+    }),
+  login: (payload) =>
+    api.post("/auth/login", payload).then((r) => {
+      storeSession(r.data);
+      return r.data;
+    }),
   logout: () => {
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     clearSession();
@@ -137,7 +139,8 @@ export const auth = {
       return r.data;
     }),
   verifyEmail: (token) => api.post("/auth/verify-email", { token }).then((r) => r.data),
-  resendVerification: (email) => api.post("/auth/resend-verification", { email }).then((r) => r.data),
+  resendVerification: (email) =>
+    api.post("/auth/resend-verification", { email }).then((r) => r.data),
   forgotPassword: (email) => api.post("/auth/forgot-password", { email }).then((r) => r.data),
   resetPassword: (token, newPassword) =>
     api.post("/auth/reset-password", { token, newPassword }).then((r) => r.data),

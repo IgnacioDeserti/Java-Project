@@ -32,7 +32,9 @@ export default function VerifyEmailPage({ token }) {
         {status === "error" && <XCircle size={32} color="var(--color-danger)" />}
         <h2>Email verification</h2>
         {status === "verifying" && <p className="loading-copy">Verifying…</p>}
-        {status !== "verifying" && <p className={status === "error" ? "form-error" : ""}>{message}</p>}
+        {status !== "verifying" && (
+          <p className={status === "error" ? "form-error" : ""}>{message}</p>
+        )}
         <a className="link-btn" href="/">
           Go to login
         </a>

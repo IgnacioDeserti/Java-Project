@@ -1,5 +1,9 @@
 package com.ignaciodeserti.kanban;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -11,20 +15,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class KanbanApiTest {
 
-    @Autowired
-    MockMvc mvc;
+    @Autowired MockMvc mvc;
 
-    @Autowired
-    ObjectMapper json;
+    @Autowired ObjectMapper json;
 
     // --- Auth ---
 
@@ -32,9 +30,11 @@ class KanbanApiTest {
     void registersLogsInAndReadsCurrentUser() throws Exception {
         String token = register("alice@example.com", "Alice");
 
-        mvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mvc.perform(
+                        post("/api/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {"email":"alice@example.com","password":"secret123"}"""))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty())
@@ -49,9 +49,11 @@ class KanbanApiTest {
     void rejectsWrongPasswordWith401() throws Exception {
         register("bob@example.com", "Bob");
 
-        mvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mvc.perform(
+                        post("/api/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {"email":"bob@example.com","password":"wrong-password"}"""))
                 .andExpect(status().isUnauthorized());
     }
@@ -65,9 +67,11 @@ class KanbanApiTest {
 
     @Test
     void rejectsShortPasswordWith400() throws Exception {
-        mvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mvc.perform(
+                        post("/api/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {"email":"tiny@example.com","password":"123","displayName":"Tiny"}"""))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").isNotEmpty());
@@ -92,16 +96,19 @@ class KanbanApiTest {
         long boardId = board.get("id").asLong();
         long firstColumnId = board.get("columns").get(0).get("id").asLong();
 
-        mvc.perform(post("/api/boards/" + boardId + "/columns")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mvc.perform(
+                        post("/api/boards/" + boardId + "/columns")
+                                .header("Authorization", "Bearer " + token)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {"title":"Backlog"}"""))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.position").value(3));
 
-        mvc.perform(delete("/api/boards/" + boardId + "/columns/" + firstColumnId)
-                        .header("Authorization", "Bearer " + token))
+        mvc.perform(
+                        delete("/api/boards/" + boardId + "/columns/" + firstColumnId)
+                                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
 
         JsonNode reloaded = getBoard(token, boardId);
@@ -120,10 +127,11 @@ class KanbanApiTest {
         long inProgressId = board.get("columns").get(1).get("id").asLong();
 
         // Drag "To Do" to the end: [In Progress, Done, To Do].
-        mvc.perform(patch("/api/boards/" + boardId + "/columns/" + todoId + "/move")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"newPosition\":2}"))
+        mvc.perform(
+                        patch("/api/boards/" + boardId + "/columns/" + todoId + "/move")
+                                .header("Authorization", "Bearer " + token)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"newPosition\":2}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.position").value(2));
 
@@ -150,10 +158,11 @@ class KanbanApiTest {
         createCard(token, boardId, doing, "X");
 
         // Drag "B" (index 1 of To Do) to the top of In Progress.
-        mvc.perform(patch("/api/boards/" + boardId + "/cards/" + b + "/move")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"targetColumnId\":" + doing + ",\"newPosition\":0}"))
+        mvc.perform(
+                        patch("/api/boards/" + boardId + "/cards/" + b + "/move")
+                                .header("Authorization", "Bearer " + token)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"targetColumnId\":" + doing + ",\"newPosition\":0}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.columnId").value(doing))
                 .andExpect(jsonPath("$.position").value(0));
@@ -188,10 +197,11 @@ class KanbanApiTest {
         long cId = createCard(token, boardId, todo, "C").get("id").asLong();
 
         // Drag "C" to the top of its own column.
-        mvc.perform(patch("/api/boards/" + boardId + "/cards/" + cId + "/move")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"targetColumnId\":" + todo + ",\"newPosition\":0}"))
+        mvc.perform(
+                        patch("/api/boards/" + boardId + "/cards/" + cId + "/move")
+                                .header("Authorization", "Bearer " + token)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"targetColumnId\":" + todo + ",\"newPosition\":0}"))
                 .andExpect(status().isOk());
 
         JsonNode cards = getBoard(token, boardId).get("columns").get(0).get("cards");
@@ -211,17 +221,20 @@ class KanbanApiTest {
         long b = createCard(token, boardId, todo, "B").get("id").asLong();
         createCard(token, boardId, todo, "C");
 
-        mvc.perform(put("/api/boards/" + boardId + "/cards/" + b)
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mvc.perform(
+                        put("/api/boards/" + boardId + "/cards/" + b)
+                                .header("Authorization", "Bearer " + token)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {"title":"B renamed","description":"with notes","priority":"HIGH"}"""))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("B renamed"))
                 .andExpect(jsonPath("$.priority").value("HIGH"));
 
-        mvc.perform(delete("/api/boards/" + boardId + "/cards/" + b)
-                        .header("Authorization", "Bearer " + token))
+        mvc.perform(
+                        delete("/api/boards/" + boardId + "/cards/" + b)
+                                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
 
         JsonNode cards = getBoard(token, boardId).get("columns").get(0).get("cards");
@@ -246,61 +259,81 @@ class KanbanApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());
 
-        mvc.perform(get("/api/boards/" + boardId).header("Authorization", "Bearer " + intruderToken))
+        mvc.perform(
+                        get("/api/boards/" + boardId)
+                                .header("Authorization", "Bearer " + intruderToken))
                 .andExpect(status().isNotFound());
 
         // Even with their own board, the intruder cannot pull someone else's card into it.
         long intruderBoardId = createBoard(intruderToken, "Mine").get("id").asLong();
-        long intruderColumnId = getBoard(intruderToken, intruderBoardId)
-                .get("columns").get(0).get("id").asLong();
+        long intruderColumnId =
+                getBoard(intruderToken, intruderBoardId).get("columns").get(0).get("id").asLong();
 
-        mvc.perform(patch("/api/boards/" + intruderBoardId + "/cards/" + cardId + "/move")
-                        .header("Authorization", "Bearer " + intruderToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"targetColumnId\":" + intruderColumnId + ",\"newPosition\":0}"))
+        mvc.perform(
+                        patch("/api/boards/" + intruderBoardId + "/cards/" + cardId + "/move")
+                                .header("Authorization", "Bearer " + intruderToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"targetColumnId\":"
+                                                + intruderColumnId
+                                                + ",\"newPosition\":0}"))
                 .andExpect(status().isNotFound());
     }
 
     // --- Helpers ---
 
     private String register(String email, String displayName) throws Exception {
-        MvcResult result = mvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        MvcResult result =
+                mvc.perform(
+                                post("/api/auth/register")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                """
                                 {"email":"%s","password":"secret123","displayName":"%s"}"""
-                                .formatted(email, displayName)))
-                .andExpect(status().isOk())
-                .andReturn();
+                                                        .formatted(email, displayName)))
+                        .andExpect(status().isOk())
+                        .andReturn();
         return body(result).get("token").asText();
     }
 
     private JsonNode createBoard(String token, String name) throws Exception {
-        MvcResult result = mvc.perform(post("/api/boards")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"%s"}""".formatted(name)))
-                .andExpect(status().isCreated())
-                .andReturn();
+        MvcResult result =
+                mvc.perform(
+                                post("/api/boards")
+                                        .header("Authorization", "Bearer " + token)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                """
+                                {"name":"%s"}"""
+                                                        .formatted(name)))
+                        .andExpect(status().isCreated())
+                        .andReturn();
         return body(result);
     }
 
     private JsonNode getBoard(String token, long boardId) throws Exception {
-        MvcResult result = mvc.perform(get("/api/boards/" + boardId)
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andReturn();
+        MvcResult result =
+                mvc.perform(
+                                get("/api/boards/" + boardId)
+                                        .header("Authorization", "Bearer " + token))
+                        .andExpect(status().isOk())
+                        .andReturn();
         return body(result);
     }
 
-    private JsonNode createCard(String token, long boardId, long columnId, String title) throws Exception {
-        MvcResult result = mvc.perform(post("/api/boards/" + boardId + "/columns/" + columnId + "/cards")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"title":"%s"}""".formatted(title)))
-                .andExpect(status().isCreated())
-                .andReturn();
+    private JsonNode createCard(String token, long boardId, long columnId, String title)
+            throws Exception {
+        MvcResult result =
+                mvc.perform(
+                                post("/api/boards/" + boardId + "/columns/" + columnId + "/cards")
+                                        .header("Authorization", "Bearer " + token)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                """
+                                {"title":"%s"}"""
+                                                        .formatted(title)))
+                        .andExpect(status().isCreated())
+                        .andReturn();
         return body(result);
     }
 

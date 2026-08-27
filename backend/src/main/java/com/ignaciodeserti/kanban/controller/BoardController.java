@@ -3,14 +3,13 @@ package com.ignaciodeserti.kanban.controller;
 import com.ignaciodeserti.kanban.dto.BoardDtos.*;
 import com.ignaciodeserti.kanban.service.BoardService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/boards")
@@ -29,14 +28,13 @@ public class BoardController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public BoardResponse createBoard(
-            @AuthenticationPrincipal UserDetails user,
-            @Valid @RequestBody CreateBoardRequest req
-    ) {
+            @AuthenticationPrincipal UserDetails user, @Valid @RequestBody CreateBoardRequest req) {
         return boardService.createBoard(user.getUsername(), req);
     }
 
     @GetMapping("/{boardId}")
-    public BoardResponse getBoard(@AuthenticationPrincipal UserDetails user, @PathVariable Long boardId) {
+    public BoardResponse getBoard(
+            @AuthenticationPrincipal UserDetails user, @PathVariable Long boardId) {
         return boardService.getBoard(user.getUsername(), boardId);
     }
 
@@ -44,16 +42,13 @@ public class BoardController {
     public BoardResponse updateBoard(
             @AuthenticationPrincipal UserDetails user,
             @PathVariable Long boardId,
-            @Valid @RequestBody UpdateBoardRequest req
-    ) {
+            @Valid @RequestBody UpdateBoardRequest req) {
         return boardService.updateBoard(user.getUsername(), boardId, req);
     }
 
     @DeleteMapping("/{boardId}")
     public ResponseEntity<Void> deleteBoard(
-            @AuthenticationPrincipal UserDetails user,
-            @PathVariable Long boardId
-    ) {
+            @AuthenticationPrincipal UserDetails user, @PathVariable Long boardId) {
         boardService.deleteBoard(user.getUsername(), boardId);
         return ResponseEntity.noContent().build();
     }
@@ -65,8 +60,7 @@ public class BoardController {
     public ColumnResponse createColumn(
             @AuthenticationPrincipal UserDetails user,
             @PathVariable Long boardId,
-            @Valid @RequestBody CreateColumnRequest req
-    ) {
+            @Valid @RequestBody CreateColumnRequest req) {
         return boardService.createColumn(user.getUsername(), boardId, req);
     }
 
@@ -75,8 +69,7 @@ public class BoardController {
             @AuthenticationPrincipal UserDetails user,
             @PathVariable Long boardId,
             @PathVariable Long columnId,
-            @Valid @RequestBody UpdateColumnRequest req
-    ) {
+            @Valid @RequestBody UpdateColumnRequest req) {
         return boardService.updateColumn(user.getUsername(), boardId, columnId, req);
     }
 
@@ -86,8 +79,7 @@ public class BoardController {
             @AuthenticationPrincipal UserDetails user,
             @PathVariable Long boardId,
             @PathVariable Long columnId,
-            @RequestBody MoveColumnRequest req
-    ) {
+            @RequestBody MoveColumnRequest req) {
         return boardService.moveColumn(user.getUsername(), boardId, columnId, req);
     }
 
@@ -95,8 +87,7 @@ public class BoardController {
     public ResponseEntity<Void> deleteColumn(
             @AuthenticationPrincipal UserDetails user,
             @PathVariable Long boardId,
-            @PathVariable Long columnId
-    ) {
+            @PathVariable Long columnId) {
         boardService.deleteColumn(user.getUsername(), boardId, columnId);
         return ResponseEntity.noContent().build();
     }
@@ -109,8 +100,7 @@ public class BoardController {
             @AuthenticationPrincipal UserDetails user,
             @PathVariable Long boardId,
             @PathVariable Long columnId,
-            @Valid @RequestBody CreateCardRequest req
-    ) {
+            @Valid @RequestBody CreateCardRequest req) {
         return boardService.createCard(user.getUsername(), boardId, columnId, req);
     }
 
@@ -119,8 +109,7 @@ public class BoardController {
             @AuthenticationPrincipal UserDetails user,
             @PathVariable Long boardId,
             @PathVariable Long cardId,
-            @Valid @RequestBody UpdateCardRequest req
-    ) {
+            @Valid @RequestBody UpdateCardRequest req) {
         return boardService.updateCard(user.getUsername(), boardId, cardId, req);
     }
 
@@ -128,8 +117,7 @@ public class BoardController {
     public ResponseEntity<Void> deleteCard(
             @AuthenticationPrincipal UserDetails user,
             @PathVariable Long boardId,
-            @PathVariable Long cardId
-    ) {
+            @PathVariable Long cardId) {
         boardService.deleteCard(user.getUsername(), boardId, cardId);
         return ResponseEntity.noContent().build();
     }
@@ -141,8 +129,7 @@ public class BoardController {
             @AuthenticationPrincipal UserDetails user,
             @PathVariable Long boardId,
             @PathVariable Long cardId,
-            @RequestBody MoveCardRequest req
-    ) {
+            @RequestBody MoveCardRequest req) {
         return boardService.moveCard(user.getUsername(), boardId, cardId, req);
     }
 }

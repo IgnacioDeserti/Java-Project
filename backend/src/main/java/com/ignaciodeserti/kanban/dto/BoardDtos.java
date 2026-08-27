@@ -5,7 +5,6 @@ import com.ignaciodeserti.kanban.entity.BoardColumn;
 import com.ignaciodeserti.kanban.entity.Card;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -17,14 +16,10 @@ public class BoardDtos {
     // too-long input comes back as a clean 400 instead of a DataIntegrityViolation 500.
 
     public record CreateBoardRequest(
-            @NotBlank @Size(max = 200) String name,
-            @Size(max = 2000) String description
-    ) {}
+            @NotBlank @Size(max = 200) String name, @Size(max = 2000) String description) {}
 
     public record UpdateBoardRequest(
-            @NotBlank @Size(max = 200) String name,
-            @Size(max = 2000) String description
-    ) {}
+            @NotBlank @Size(max = 200) String name, @Size(max = 2000) String description) {}
 
     public record CreateColumnRequest(@NotBlank @Size(max = 100) String title, Integer position) {}
 
@@ -37,14 +32,12 @@ public class BoardDtos {
             @NotBlank @Size(max = 200) String title,
             @Size(max = 2000) String description,
             Integer position,
-            Card.Priority priority
-    ) {}
+            Card.Priority priority) {}
 
     public record UpdateCardRequest(
             @NotBlank @Size(max = 200) String title,
             @Size(max = 2000) String description,
-            Card.Priority priority
-    ) {}
+            Card.Priority priority) {}
 
     /** Used when dragging a card to a new column/position. */
     public record MoveCardRequest(Long targetColumnId, Integer newPosition) {}
@@ -59,8 +52,7 @@ public class BoardDtos {
             String description,
             Integer position,
             Card.Priority priority,
-            Long columnId
-    ) {
+            Long columnId) {
         public static CardResponse from(Card card) {
             return new CardResponse(
                     card.getId(),
@@ -68,33 +60,28 @@ public class BoardDtos {
                     card.getDescription(),
                     card.getPosition(),
                     card.getPriority(),
-                    card.getColumn().getId()
-            );
+                    card.getColumn().getId());
         }
     }
 
     public record ColumnResponse(
-            Long id,
-            String title,
-            Integer position,
-            List<CardResponse> cards
-    ) {
+            Long id, String title, Integer position, List<CardResponse> cards) {
         public static ColumnResponse from(BoardColumn column) {
-            List<CardResponse> cards = column.getCards().stream()
-                    .sorted(Comparator.comparing(Card::getPosition))
-                    .map(CardResponse::from)
-                    .toList();
-            return new ColumnResponse(column.getId(), column.getTitle(), column.getPosition(), cards);
+            List<CardResponse> cards =
+                    column.getCards().stream()
+                            .sorted(Comparator.comparing(Card::getPosition))
+                            .map(CardResponse::from)
+                            .toList();
+            return new ColumnResponse(
+                    column.getId(), column.getTitle(), column.getPosition(), cards);
         }
     }
 
-    /** Board without its columns — used for the board list, so we don't drag the whole tree along. */
+    /**
+     * Board without its columns — used for the board list, so we don't drag the whole tree along.
+     */
     public record BoardSummaryResponse(
-            Long id,
-            String name,
-            String description,
-            Instant createdAt
-    ) {
+            Long id, String name, String description, Instant createdAt) {
         public static BoardSummaryResponse from(Board board) {
             return new BoardSummaryResponse(
                     board.getId(), board.getName(), board.getDescription(), board.getCreatedAt());
@@ -107,15 +94,19 @@ public class BoardDtos {
             String name,
             String description,
             Instant createdAt,
-            List<ColumnResponse> columns
-    ) {
+            List<ColumnResponse> columns) {
         public static BoardResponse from(Board board) {
-            List<ColumnResponse> columns = board.getColumns().stream()
-                    .sorted(Comparator.comparing(BoardColumn::getPosition))
-                    .map(ColumnResponse::from)
-                    .toList();
+            List<ColumnResponse> columns =
+                    board.getColumns().stream()
+                            .sorted(Comparator.comparing(BoardColumn::getPosition))
+                            .map(ColumnResponse::from)
+                            .toList();
             return new BoardResponse(
-                    board.getId(), board.getName(), board.getDescription(), board.getCreatedAt(), columns);
+                    board.getId(),
+                    board.getName(),
+                    board.getDescription(),
+                    board.getCreatedAt(),
+                    columns);
         }
     }
 }

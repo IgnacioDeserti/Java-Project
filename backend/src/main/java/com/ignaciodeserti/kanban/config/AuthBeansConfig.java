@@ -11,15 +11,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * Split out of SecurityConfig: AuthService needs both of these beans, and SecurityConfig
- * now depends (transitively, via the Google OAuth success handler) on AuthService — a
- * @Bean method living on SecurityConfig itself would be a circular dependency (building
- * SecurityConfig would require SecurityConfig to already exist, to invoke the method on).
+ * Split out of SecurityConfig: AuthService needs both of these beans, and SecurityConfig now
+ * depends (transitively, via the Google OAuth success handler) on AuthService — a @Bean method
+ * living on SecurityConfig itself would be a circular dependency (building SecurityConfig would
+ * require SecurityConfig to already exist, to invoke the method on).
  *
- * The AuthenticationManager is built directly from a DaoAuthenticationProvider here,
- * rather than via Spring Security's AuthenticationConfiguration#getAuthenticationManager
- * — that path scans the context for AuthenticationProvider/UserDetailsService beans,
- * which would reach back into SecurityConfig and reintroduce the same cycle.
+ * <p>The AuthenticationManager is built directly from a DaoAuthenticationProvider here, rather than
+ * via Spring Security's AuthenticationConfiguration#getAuthenticationManager — that path scans the
+ * context for AuthenticationProvider/UserDetailsService beans, which would reach back into
+ * SecurityConfig and reintroduce the same cycle.
  */
 @Configuration
 @RequiredArgsConstructor

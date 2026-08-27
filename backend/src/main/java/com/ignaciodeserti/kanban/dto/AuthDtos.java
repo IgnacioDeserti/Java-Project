@@ -9,13 +9,9 @@ public class AuthDtos {
     public record RegisterRequest(
             @Email @NotBlank String email,
             @NotBlank @Size(min = 6, message = "must be at least 6 characters") String password,
-            @NotBlank @Size(max = 100) String displayName
-    ) {}
+            @NotBlank @Size(max = 100) String displayName) {}
 
-    public record LoginRequest(
-            @Email @NotBlank String email,
-            @NotBlank String password
-    ) {}
+    public record LoginRequest(@Email @NotBlank String email, @NotBlank String password) {}
 
     public record RefreshRequest(@NotBlank String refreshToken) {}
 
@@ -29,8 +25,8 @@ public class AuthDtos {
 
     public record ResetPasswordRequest(
             @NotBlank String token,
-            @NotBlank @Size(min = 6, message = "must be at least 6 characters") String newPassword
-    ) {}
+            @NotBlank @Size(min = 6, message = "must be at least 6 characters")
+                    String newPassword) {}
 
     public record UpdateProfileRequest(@NotBlank @Size(max = 100) String displayName) {}
 
@@ -39,8 +35,8 @@ public class AuthDtos {
     // such accounts and skip the current-password check server-side (see AuthService).
     public record ChangePasswordRequest(
             String currentPassword,
-            @NotBlank @Size(min = 6, message = "must be at least 6 characters") String newPassword
-    ) {}
+            @NotBlank @Size(min = 6, message = "must be at least 6 characters")
+                    String newPassword) {}
 
     public record DeleteAccountRequest(String password) {}
 
@@ -50,16 +46,11 @@ public class AuthDtos {
             String email,
             String displayName,
             boolean emailVerified,
-            boolean hasPassword
-    ) {}
+            boolean hasPassword) {}
 
     /** Returned by /api/auth/me so the frontend can restore a session from a stored token. */
     public record UserResponse(
-            String email,
-            String displayName,
-            boolean emailVerified,
-            boolean hasPassword
-    ) {}
+            String email, String displayName, boolean emailVerified, boolean hasPassword) {}
 
     /** Generic acknowledgement for flows that must not leak whether an email exists. */
     public record MessageResponse(String message) {}

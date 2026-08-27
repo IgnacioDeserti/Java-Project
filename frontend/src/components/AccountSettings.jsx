@@ -59,7 +59,8 @@ export default function AccountSettings({ user, onClose, onProfileUpdated, onAcc
     setDeleteError(null);
     const ok = await confirm({
       title: "Delete your account?",
-      message: "Your account and every board you own will be permanently deleted. This can't be undone.",
+      message:
+        "Your account and every board you own will be permanently deleted. This can't be undone.",
       confirmLabel: "Yes, delete it",
       danger: true,
     });
@@ -104,8 +105,8 @@ export default function AccountSettings({ user, onClose, onProfileUpdated, onAcc
         <h3>{user.hasPassword ? "Change password" : "Set a password"}</h3>
         {!user.hasPassword && (
           <p className="settings-danger-copy">
-            You signed up with Google and have no password yet — set one to also be able to log
-            in with your email.
+            You signed up with Google and have no password yet — set one to also be able to log in
+            with your email.
           </p>
         )}
         {user.hasPassword && (

@@ -59,12 +59,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
-button, input, textarea, select {
+button,
+input,
+textarea,
+select {
   font-family: inherit;
 }
 
@@ -141,7 +146,10 @@ button {
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background-color var(--transition), border-color var(--transition), transform var(--transition);
+  transition:
+    background-color var(--transition),
+    border-color var(--transition),
+    transform var(--transition);
 }
 
 .btn-primary,
@@ -223,7 +231,9 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
 }
 
 .danger-link:hover {
@@ -241,7 +251,9 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
 }
 
 .icon-btn:hover {
@@ -284,7 +296,9 @@ button:disabled {
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color var(--transition), box-shadow var(--transition);
+  transition:
+    background-color var(--transition),
+    box-shadow var(--transition);
 }
 
 .google-btn:hover {
@@ -314,7 +328,9 @@ button:disabled {
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
 }
 
 .login-form input:focus {
@@ -427,7 +443,10 @@ button:disabled {
   padding: 1.1rem;
   cursor: pointer;
   text-align: left;
-  transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition);
+  transition:
+    box-shadow var(--transition),
+    border-color var(--transition),
+    transform var(--transition);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -592,7 +611,9 @@ button:disabled {
   font-size: 0.875rem;
   width: 100%;
   border-radius: var(--radius-sm);
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
 }
 
 .add-column-btn:hover {
@@ -626,7 +647,9 @@ button:disabled {
   font-size: 0.825rem;
   border-radius: var(--radius-sm);
   margin-top: 0.25rem;
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
 }
 
 .add-card-btn:hover {
@@ -647,7 +670,9 @@ button:disabled {
   box-shadow: var(--shadow-sm);
   cursor: grab;
   position: relative;
-  transition: box-shadow var(--transition), border-color var(--transition);
+  transition:
+    box-shadow var(--transition),
+    border-color var(--transition);
 }
 
 .card-item:hover {
@@ -738,7 +763,9 @@ button:disabled {
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   resize: vertical;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
 }
 
 .card-editor input:focus,
@@ -805,13 +832,23 @@ button:disabled {
 }
 
 @keyframes overlay-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modal-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-header {
@@ -852,7 +889,9 @@ button:disabled {
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
   margin-bottom: 1.25rem;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
 }
 
 .dialog-input:focus {
@@ -900,7 +939,9 @@ button:disabled {
   border-radius: var(--radius-sm);
   font: inherit;
   font-size: 0.875rem;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
 }
 
 .settings-section input:focus {
@@ -944,8 +985,14 @@ button:disabled {
 }
 
 @keyframes toast-in {
-  from { opacity: 0; transform: translateX(16px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .toast-icon {
@@ -1005,7 +1052,9 @@ button:disabled {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ============================================================

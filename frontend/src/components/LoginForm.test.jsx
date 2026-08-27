@@ -96,7 +96,9 @@ describe("LoginForm", () => {
     const resendButton = await screen.findByText("Resend verification email");
     await user.click(resendButton);
 
-    await waitFor(() => expect(auth.resendVerification).toHaveBeenCalledWith("unverified@example.com"));
+    await waitFor(() =>
+      expect(auth.resendVerification).toHaveBeenCalledWith("unverified@example.com")
+    );
     expect(await screen.findByText("Verification email sent")).toBeInTheDocument();
   });
 });
